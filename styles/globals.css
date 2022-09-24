@@ -24,3 +24,13 @@ a {
     background: black;
   }
 }
+
+@media (prefers-color-scheme: light) {
+  html {
+    color-scheme: light;
+  }
+  body {
+    color: hsl(203, 100%, 7%);
+    background: rgb(146, 146, 146);
+  }
+}

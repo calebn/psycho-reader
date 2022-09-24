@@ -12,23 +12,25 @@ yarn dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+## How it works
 
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
+1. A Request to the index page generates a server side request to get the config for the Reader.
+   1. From the datasrc location in the env file, the location is traversed taking in files to use
+      to construct objects representing pages and panels. Each object has an image souce, dimensions,
+      and a center point that are calculated.
+   2. Once all objects are created, the config is passed back as props to the Home component
+2. Once the config is generated, we create a Client that takes in the config and reconstructs the objects
+   needed
+3. Map over each page object to create SwiperSlides with a custom Canvas component
+4. OnNavigationEvents determine page/panel changes.
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
+## Todo
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+- Prop drilling with the new panel image doesn't seem to work so when we want to move from a page image to a
+  panel image, the component does not re-render
+- Animate the transition from viewing the page image to viewing the panel image. The idea being the panel image
+  animates off of the page and scales to be the main image.
+- On click/touch zoom functionality for a given image
+- Make responsive and mobile friendly
+- Enable swipe navigation
+- Move all of the functionality in the index page to the Client class

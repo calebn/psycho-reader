@@ -11,6 +11,7 @@
     "test-watch": "jest --watch"
   },
   "dependencies": {
+    "image-size": "^1.0.2",
     "next": "12.2.4",
     "react": "18.2.0",
     "react-dom": "18.2.0",
@@ -21,6 +22,7 @@
     "@testing-library/react": "^13.4.0",
     "@types/jest": "^29.0.1",
     "@types/node": "18.7.1",
+    "@types/object-fit-images": "^3.2.3",
     "@types/react": "18.0.17",
     "@types/react-dom": "18.0.6",
     "eslint": "8.21.0",

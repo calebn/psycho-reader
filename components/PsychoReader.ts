@@ -5,6 +5,8 @@ import Book from "./Book";
 import Page from "./Page";
 import Panel from "./Panel";
 
+import sizeOf from "image-size";
+
 /**
  * Simple object definition for grouping
  * image filepaths for a Page object
@@ -17,7 +19,7 @@ interface IFileLoad {
   panels: string[];
 }
 
-class PsyReader {
+export class PsyReader {
   book?: Book;
   dataSrc: string;
 
@@ -52,10 +54,15 @@ class PsyReader {
             if (results[parseInt(pageNum)] === undefined) {
               results[parseInt(pageNum)] = { panels: [] };
             }
-            results[parseInt(pageNum)].panels.push(filePath);
+            results[parseInt(pageNum)].panels.push(
+              path.join(path.sep, filePath.replace("public/", ""))
+            );
           } else {
             //paretnDir is the page number already so append the page image
-            results[parseInt(parentDir)] = { page: filePath, panels: [] };
+            results[parseInt(parentDir)] = {
+              page: path.join(path.sep, filePath.replace("public/", "")),
+              panels: [],
+            };
           }
         }
       })
@@ -67,7 +74,16 @@ class PsyReader {
   buildPanelsForPage = (files: string[]) => {
     return files.map((filePath) => {
       if (filePath === undefined) throw Error("Missing panel url");
-      return new Panel(filePath);
+      const dimensions = sizeOf(path.join("public", filePath));
+      if (dimensions.width === undefined || dimensions.height === undefined)
+        throw new Error(`Cannot determine image dimensions`);
+      return new Panel({
+        imageUrl: filePath,
+        panelDimensions: {
+          width: dimensions.width,
+          height: dimensions.height,
+        },
+      });
     });
   };
 
@@ -75,9 +91,16 @@ class PsyReader {
   buildPages = (files: IFileLoad[]) => {
     return files.map(({ page, panels }) => {
       if (page === undefined) throw Error("Missing page url");
-      return new Page(page, this.buildPanelsForPage(panels), {
-        height: -1,
-        width: -1,
+      const dimensions = sizeOf(path.join("public", page));
+      if (dimensions.width === undefined || dimensions.height === undefined)
+        throw new Error(`Cannot determine image dimensions`);
+      return new Page({
+        imageUrl: page,
+        panels: this.buildPanelsForPage(panels),
+        pageDimensions: {
+          width: dimensions.width,
+          height: dimensions.height,
+        },
       });
     });
   };
@@ -98,14 +121,15 @@ class PsyReader {
   };
 }
 
-export type PsychoReaderType = {
+export interface IPsychoReaderConfig {
   book?: Book;
   dataSrc: string;
-};
+}
 
 //factory method for a getting a PsychoReaderType
 //allows us to use async to build the book object
-export default async function PsychoReader(dataSrc?: string) {
+//usage: const reader: PsychoReaderType = await PsychoReader();
+export default async function PsychoReaderConfig(dataSrc?: string) {
   if (dataSrc === undefined && process.env.PSYCHOREADER_PATH !== undefined) {
     dataSrc = process.env.PSYCHOREADER_PATH; // relative path
   }

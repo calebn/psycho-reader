@@ -1,7 +1,5 @@
 import PsychoReader from "../components/PsychoReader";
 import Book from "../components/Book";
-// import PsyReader from "../src/PsyReader";
-// import Book from "../src/Book";
 
 describe("PsychoReader", () => {
   test("Is PsychoReader defined", async () => {
