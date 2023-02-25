@@ -114,11 +114,15 @@ class Page {
   }
 
   goToFirstPanel() {
-    if (this.hasPanels()) this.setPanel(0);
+    if (this.hasPanels()) {
+      this.goToPanel(this.currentPanel, 0);
+    }
   }
 
   goToLastPanel() {
-    if (this.hasPanels()) this.setPanel(this.panels.length - 1);
+    if (this.hasPanels()) {
+      this.goToPanel(this.currentPanel, this.panels.length - 1);
+    }
   }
 
   goToWholePagePanel() {
