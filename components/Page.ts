@@ -85,12 +85,7 @@ class Page {
   }
 
   nextPanel() {
-    if (this.currentPanel < this.panels.length - 1) this.currentPanel++;
-    if (this?.ref?.current) {
-      const canvasPropsOld = getDrawImagePropsFromPage(this, this.ref.current, this.currentPanel -1);
-      const canvasPropsNew =  getDrawImagePropsFromPage(this, this.ref.current, this.currentPanel);
-      zoomPan(this.ref.current, this.imageUrl, canvasPropsOld, canvasPropsNew);
-    }
+    this.goToPanel(this.currentPanel, this.currentPanel+1);
   }
 
   hasNextPanel() {
@@ -98,12 +93,7 @@ class Page {
   }
 
   prevPanel() {
-    if (this.currentPanel >= 0) this.currentPanel--;
-    if (this?.ref?.current) {
-      const canvasPropsOld = getDrawImagePropsFromPage(this, this.ref.current, this.currentPanel + 1);
-      const canvasPropsNew =  getDrawImagePropsFromPage(this, this.ref.current, this.currentPanel);
-      zoomPan(this.ref.current, this.imageUrl, canvasPropsOld, canvasPropsNew);
-    }
+    this.goToPanel(this.currentPanel, this.currentPanel-1);
   }
 
   hasPrevPanel() {
@@ -132,12 +122,7 @@ class Page {
   }
 
   goToWholePagePanel() {
-    if (this?.ref?.current) {
-      const canvasPropsOld = getDrawImagePropsFromPage(this, this.ref.current, this.currentPanel);
-      const canvasPropsNew =  getDrawImagePropsFromPage(this, this.ref.current, -1);
-      zoomPan(this.ref.current, this.imageUrl, canvasPropsOld, canvasPropsNew);
-    }
-    this.currentPanel = -1;
+    this.goToPanel(this.currentPanel, -1);
     console.log('currentPanel NOW whole page Panel: '+this.currentPanel);
   }
 }
