@@ -57,7 +57,7 @@ class Book {
 
   goToStartOfPage(pageIdx: number) {
     this.setPage(pageIdx);
-    this.getCurrentPage().goToFirstPanel();
+    this.getCurrentPage().goToWholePagePanel();
   }
 
   goToEndOfPage(pageIdx: number) {
@@ -68,8 +68,7 @@ class Book {
   goToNext() {
     if (this.hasNextPage()) {
       this.nextPage(); //set the next page in array
-      this.getCurrentPage().goToFirstPanel(); //set the panel to be the first
-      this.getCurrentPage().setDisplayImage(this.getCurrentPage().imageUrl); //set the current display image to the page image
+      this.getCurrentPage().goToWholePagePanel(); //set the panel to be the first
     }
   }
 
@@ -77,9 +76,6 @@ class Book {
     if (this.hasPrevPage()) {
       this.prevPage(); //set the prev page in array
       this.getCurrentPage().goToLastPanel(); //set the panel to be the last
-      const panel = this.getCurrentPage().getCurrentPanel();
-      const url = panel ? panel.imageUrl : this.getCurrentPage().imageUrl;
-      this.getCurrentPage().setDisplayImage(url);
     }
   }
 }

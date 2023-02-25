@@ -1,6 +1,7 @@
 import Panel from "./Panel";
+import { zoomPan, getDrawImagePropsFromPage } from "../utils/CanvasHelper";
 
-interface PageDimension {
+export interface PageDimension {
   width: number;
   height: number;
 }
@@ -32,7 +33,7 @@ class Page {
     this.imageUrl = imageUrl;
     this.displayImage = imageUrl;
     this.panels = panels;
-    this.currentPanel = 0;
+    this.currentPanel = -1;
     this.pageDimensions = pageDimensions;
     this.center = center;
     if (this.center === undefined) {
@@ -44,27 +45,15 @@ class Page {
   }
 
   isOnPageImage() {
-    return this.displayImage === this.imageUrl;
-  }
-
-  setDisplayImage(displayImage: string) {
-    this.displayImage = displayImage;
+    return this.currentPanel === -1;
   }
 
   nextImage() {
-    if (this.isOnPageImage()) {
-      this.setDisplayImage(this.panels[0].imageUrl);
-    } else {
       this.goToNextPanel();
-    }
   }
 
   prevImage() {
-    if (this.currentPanel === 0) {
-      this.setDisplayImage(this.imageUrl);
-    } else {
-      this.goToPrevPanel();
-    }
+    this.goToPrevPanel();
   }
 
   hasPanels() {
@@ -74,19 +63,34 @@ class Page {
   goToNextPanel() {
     if (this.hasNextPanel()) {
       this.nextPanel();
-      this.setDisplayImage(this.panels[this.currentPanel].imageUrl);
+      console.log('currentPanel NOW: '+this.currentPanel);
     }
   }
-
+  
   goToPrevPanel() {
     if (this.hasPrevPanel()) {
       this.prevPanel();
-      this.setDisplayImage(this.panels[this.currentPanel].imageUrl);
+      console.log('currentPanel NOW: '+this.currentPanel);
+    }
+  }
+
+  goToPanel(from: number, to: number) {
+    if (this?.ref?.current) {
+      const canvasPropsOld = getDrawImagePropsFromPage(this, this.ref.current, from);
+      const canvasPropsNew =  getDrawImagePropsFromPage(this, this.ref.current, to);
+      zoomPan(this.ref.current, this.imageUrl, canvasPropsOld, canvasPropsNew);
+      this.currentPanel = to;
+      console.log('currentPanel NOW: '+this.currentPanel);
     }
   }
 
   nextPanel() {
     if (this.currentPanel < this.panels.length - 1) this.currentPanel++;
+    if (this?.ref?.current) {
+      const canvasPropsOld = getDrawImagePropsFromPage(this, this.ref.current, this.currentPanel -1);
+      const canvasPropsNew =  getDrawImagePropsFromPage(this, this.ref.current, this.currentPanel);
+      zoomPan(this.ref.current, this.imageUrl, canvasPropsOld, canvasPropsNew);
+    }
   }
 
   hasNextPanel() {
@@ -94,23 +98,28 @@ class Page {
   }
 
   prevPanel() {
-    if (this.currentPanel > 0) this.currentPanel--;
+    if (this.currentPanel >= 0) this.currentPanel--;
+    if (this?.ref?.current) {
+      const canvasPropsOld = getDrawImagePropsFromPage(this, this.ref.current, this.currentPanel + 1);
+      const canvasPropsNew =  getDrawImagePropsFromPage(this, this.ref.current, this.currentPanel);
+      zoomPan(this.ref.current, this.imageUrl, canvasPropsOld, canvasPropsNew);
+    }
   }
 
   hasPrevPanel() {
-    return this.currentPanel > 0;
+    return this.currentPanel >= 0;
   }
 
   setPanel(panelIdx: number) {
     if (this.panels[panelIdx] !== undefined) this.currentPanel = panelIdx;
   }
 
-  getPanel(panelIdx: number) {
-    if (this.panels[panelIdx] === undefined) return null;
+  getPanel(panelIdx: number): Panel {
+    if (this.panels[panelIdx] === undefined) throw new Error(`Panel index out of range, given ${panelIdx}, must be between 0 and ${this.panels.length}`);
     return this.panels[panelIdx];
   }
 
-  getCurrentPanel() {
+  getCurrentPanel(): Panel {
     return this.getPanel(this.currentPanel);
   }
 
@@ -120,6 +129,16 @@ class Page {
 
   goToLastPanel() {
     if (this.hasPanels()) this.setPanel(this.panels.length - 1);
+  }
+
+  goToWholePagePanel() {
+    if (this?.ref?.current) {
+      const canvasPropsOld = getDrawImagePropsFromPage(this, this.ref.current, this.currentPanel);
+      const canvasPropsNew =  getDrawImagePropsFromPage(this, this.ref.current, -1);
+      zoomPan(this.ref.current, this.imageUrl, canvasPropsOld, canvasPropsNew);
+    }
+    this.currentPanel = -1;
+    console.log('currentPanel NOW whole page Panel: '+this.currentPanel);
   }
 }
 

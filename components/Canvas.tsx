@@ -1,4 +1,7 @@
 import React, { MouseEvent, PropsWithRef, useEffect, useState } from "react";
+import Page from "./Page";
+import { getImageToCanvasScale, getCanvasDimension, getDrawImagePropsFromPage } from "../utils/CanvasHelper";
+import { Dimension } from "./DimensionType";
 
 interface BaseImageProps {
   width: number;
@@ -7,6 +10,7 @@ interface BaseImageProps {
   alt?: string;
   layout?: "fixed" | "fill" | "intrinsic" | "responsive" | undefined;
   objectPosition: string;
+  page: Page;
   canvasRef: React.RefObject<HTMLCanvasElement>;
 }
 
@@ -21,6 +25,7 @@ const Canvas = (props: CanvasProps) => {
     alt,
     layout,
     objectPosition,
+    page,
     ...other
   } = props;
   const [scale, setScale] = useState<number>(1);
@@ -39,29 +44,27 @@ const Canvas = (props: CanvasProps) => {
     comicImage.onload = () => {
       const aspectRatio = comicImage.width / comicImage.height;
       if (ctx && current) {
-        let scaleX = current.width / comicImage.width;
-        let scaleY = current.height / comicImage.height;
-        setScale(Math.min(scaleX, scaleY));
-
-        // get the coordinates on the canvas of where to start the image clip
-        // this will scale to fit the image on the canvas, nice and centered
-        let x = current.width / 2 - (comicImage.width / 2) * scale;
-        let y = current.height / 2 - (comicImage.height / 2) * scale;
-
-        //this helps to scale the canvas for higher dpi displays,
-        //i.e. pixelRatio > 1  like Retina displays or phones
-        const pixelRatio = window.devicePixelRatio;
-        ctx.canvas.width = window.innerWidth * pixelRatio;
-        ctx.canvas.height = window.innerHeight * pixelRatio;
+        ctx.canvas.height = getCanvasDimension(Dimension.Height);
+        ctx.canvas.width = getCanvasDimension(Dimension.Width);
         ctx.canvas.style.width = window.innerWidth + "px";
         ctx.canvas.style.height = window.innerHeight + "px";
 
+        const {offsetX, offsetY, scaledWidth, scaledHeight} = getDrawImagePropsFromPage(page, current);
+
+        // this will scale to fit the image on the canvas, nice and centered
+        setScale(getImageToCanvasScale(comicImage.width, comicImage.height, current));
+
+        console.log('comicImage.width',comicImage.width);
+        console.log('comicImage.height',comicImage.height);
+        console.log('current.height',current.height);
+        console.log('current.height',current.height);
+
         ctx.drawImage(
           comicImage,
-          x,
-          y,
-          comicImage.width * scale, //scales the image down to fit the canvas
-          comicImage.height * scale //scales the image down to fit the canvas
+          offsetX,
+          offsetY,
+          scaledWidth, //scales the image up/down to fit the canvas
+          scaledHeight //scales the image up/down to fit the canvas
         );
       }
     };
@@ -71,7 +74,7 @@ const Canvas = (props: CanvasProps) => {
         ctx.clearRect(0, 0, current.width, current.height);
       }
     };
-  }, [canvasRef, scale, src]);
+  }, [canvasRef, page, scale, src]);
 
   /**
    * Click to zoom functionality

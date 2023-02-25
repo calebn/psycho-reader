@@ -7,5 +7,4 @@ export type Point = {
 
 export interface IShape {
   shapeType: ShapeType;
-  center: Point;
 }
