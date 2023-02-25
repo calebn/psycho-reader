@@ -1,9 +1,10 @@
-import { existsSync } from "fs";
+import { existsSync, readFileSync } from "fs";
 import { readdir, stat } from "fs/promises";
 import * as path from "path";
 import Book from "./Book";
 import Page from "./Page";
 import Panel from "./Panel";
+import {ICenter, IDimensions, IPanel, IPage, IConfig} from "./IConfig";
 
 import sizeOf from "image-size";
 
@@ -16,23 +17,48 @@ import sizeOf from "image-size";
  */
 interface IFileLoad {
   page?: string;
-  panels: string[];
 }
 
 export class PsyReader {
-  book?: Book;
+  // book?: Book;
   dataSrc: string;
+  config: IConfig;
 
-  constructor(dataSrc: string) {
+  constructor(dataSrc: string, config: IConfig) {
     this.dataSrc = dataSrc;
+    this.config = config;
   }
 
   //traverse dir for panel images where the parent dir is the Page and
   //each image in the curent dir is the Panel image
   loadBook = async () => {
     const files = await this.loadFiles(this.dataSrc);
+    // console.log(files);
     const pages = this.buildPages(files);
     return this.buildBook(pages);
+  };
+
+  loadPages = async (dir: string, results: IFileLoad[] = []) => {
+    const subdirs: string[] = await readdir(dir);
+    await Promise.all(
+      subdirs.map(async (file) => {
+        const filePath = path.join(dir, file);
+        const stats = await stat(filePath);
+        if (stats.isDirectory()) return this.loadFiles(filePath, results);
+        if (stats.isFile() && file != 'config.json') {
+          const parts = path.parse(filePath);
+          const parentDir = this.getParentDirFromBasepath(filePath);
+
+          if (!isNaN(parseInt(parentDir)) ) {
+
+            results[parseInt(parentDir)] = {
+              page: path.join(path.sep, filePath.replace("public/", "")),
+            };
+          }
+        }
+      })
+    );
+    return results;
   };
 
   //recursive walk for files
@@ -43,25 +69,12 @@ export class PsyReader {
         const filePath = path.join(dir, file);
         const stats = await stat(filePath);
         if (stats.isDirectory()) return this.loadFiles(filePath, results);
-        if (stats.isFile()) {
+        if (stats.isFile() && file != 'config.json') {
           const parts = path.parse(filePath);
           const parentDir = this.getParentDirFromBasepath(filePath);
-          if (parentDir === "panels") {
-            //find the page number ad index into results array and append
-            const pageNum = this.getParentDirFromBasepath(
-              filePath.replace(path.join(path.sep, parts.base), "")
-            );
-            if (results[parseInt(pageNum)] === undefined) {
-              results[parseInt(pageNum)] = { panels: [] };
-            }
-            results[parseInt(pageNum)].panels.push(
-              path.join(path.sep, filePath.replace("public/", ""))
-            );
-          } else {
-            //paretnDir is the page number already so append the page image
+          if (!isNaN(parseInt(parentDir)) ) {
             results[parseInt(parentDir)] = {
               page: path.join(path.sep, filePath.replace("public/", "")),
-              panels: [],
             };
           }
         }
@@ -71,32 +84,25 @@ export class PsyReader {
   };
 
   //returns a bunch of panels
-  buildPanelsForPage = (files: string[]) => {
-    return files.map((filePath) => {
-      if (filePath === undefined) throw Error("Missing panel url");
-      const dimensions = sizeOf(path.join("public", filePath));
-      if (dimensions.width === undefined || dimensions.height === undefined)
-        throw new Error(`Cannot determine image dimensions`);
-      return new Panel({
-        imageUrl: filePath,
-        panelDimensions: {
-          width: dimensions.width,
-          height: dimensions.height,
-        },
-      });
+  buildPanelsForPage = (panels: IPanel[]) => {
+    // console.log(panels)
+    return panels.map((panel) => {
+      return new Panel(panel);
     });
   };
 
   //returns a bunch of pages
   buildPages = (files: IFileLoad[]) => {
-    return files.map(({ page, panels }) => {
+    // console.log('this.config: ');
+    // console.log(this.config);
+    return files.map(({ page }, index) => {
       if (page === undefined) throw Error("Missing page url");
       const dimensions = sizeOf(path.join("public", page));
       if (dimensions.width === undefined || dimensions.height === undefined)
         throw new Error(`Cannot determine image dimensions`);
       return new Page({
         imageUrl: page,
-        panels: this.buildPanelsForPage(panels),
+        panels: this.buildPanelsForPage(this.config.pages[index].panels),
         pageDimensions: {
           width: dimensions.width,
           height: dimensions.height,
@@ -139,7 +145,9 @@ export default async function PsychoReaderConfig(dataSrc?: string) {
   if (!existsSync(dataSrc)) {
     throw Error("Invalid data source path");
   }
-  let reader = new PsyReader(dataSrc);
-  reader.book = await reader.loadBook();
-  return reader;
+  const config: IConfig = JSON.parse(readFileSync(dataSrc+path.sep+'config.json').toString());
+  // let reader = new PsyReader(dataSrc, config);
+  // reader.book = await reader.loadBook();
+  // reader.pages = await reader.loadPages();
+  return config;
 }
