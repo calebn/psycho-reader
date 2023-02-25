@@ -155,7 +155,7 @@ const Home = (
       console.log(
         `currentPage ${book.currentPage} has previous panel(s). allowSlidePrev=false`
       );
-      swiper.allowSlideNext = false;
+      swiper.allowSlidePrev = false;
     } else if (book.hasPrevPage()) {
       console.log(
         `currentPage ${book.currentPage} has no panels. allowSlideNext=true`
