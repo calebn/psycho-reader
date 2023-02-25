@@ -15,9 +15,11 @@ import "swiper/css/pagination";
 import Canvas from "../components/Canvas";
 import Book from "../components/Book";
 import { createRef, useEffect, useRef } from "react";
+import { IConfig } from "../components/IConfig";
+import { useState } from "react";
 
 export async function getServerSideProps() {
-  const readerConfig: IPsychoReaderConfig = await PsychoReaderConfig();
+  const readerConfig: IConfig = await PsychoReaderConfig();
   return {
     props: {
       psychoReaderConfig: JSON.parse(JSON.stringify(readerConfig)),
@@ -29,18 +31,15 @@ export async function getServerSideProps() {
  * @todo A user should be able to click/touch on a page image to see the image
  *       in greater detail. Implement zoom on click/touch functionality. Should
  *       be simple enough.
+ * 
+ * @todo Implement window resize handling
  *
  * @todo When going from full page view and swiping to the next panel, the
  *       experience should be the panel animates off the page from its
  *       location/coordiantes and is now it's the primary view.
  *       - Sequence
  *        1. On swipe begins the animation
- *        2. A new canvas image is drawn from the dimensions of the panel object
- *           (coordiates in space or a center coordinate, along with x and y
- *           dimensions) with the canvas the same size.
- *        3. Canvas animates like it is coming off the page and gets larger to
- *           file the screen real estate
- *        4. The exit animation should shrink the canvas back to the orignal
+ *        2. The exit animation should shrink the canvas back to the orignal
  *           size and location on the page image behind it
  */
 const Home = (
@@ -62,7 +61,7 @@ const Home = (
   // allow a slide to change when there are no panels
   // (cover or inside page) or when we're at the last
   // panel of a page that is not the last page
-  // need a way to detect the direction enxt/previous
+  // need a way to detect the direction next/previous
   const handleOnSlideChange = (swiper: Swiper, { book }: { book: Book }) => {
     const dir =
       swiper.realIndex > swiper.previousIndex ||
@@ -121,7 +120,7 @@ const Home = (
   };
 
   const handleOnNextEnd = (swiper: Swiper, book: Book) => {
-    book.nextPage();
+    book.goToNext();
     console.log(
       `current page is ${book.currentPage} and displayImage is ${
         book.getCurrentPage().displayImage
@@ -144,7 +143,7 @@ const Home = (
   };
 
   const handleOnPrevEnd = (swiper: Swiper, book: Book) => {
-    book.prevPage();
+    book.goToPrev();
     console.log(
       `new current page is ${book.currentPage} and displayImage is ${
         book.getCurrentPage().displayImage
@@ -303,6 +302,7 @@ const Home = (
                       width={page.pageDimensions.width}
                       height={page.pageDimensions.height}
                       objectPosition="contain"
+                      page={page}
                       canvasRef={ref}
                     />
                   </SwiperSlide>

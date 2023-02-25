@@ -1,33 +1,26 @@
 import Book from "./Book";
 import Page from "./Page";
 import Panel from "./Panel";
+import { IConfig, IPage, IPanel } from "./IConfig";
 
 export interface PsychoReaderClient {
   book: Book;
-  dataSrc: string;
 }
 
-export function Client(config: PsychoReaderClient) {
-  const { dataSrc, book } = config;
-  const pages = book.pages.map((pageConfig: Page) => {
-    const panels = pageConfig.panels.map((panelConfig: Panel) => {
-      return new Panel({
-        imageUrl: panelConfig.imageUrl,
-        panelDimensions: panelConfig.panelDimensions,
-        center: panelConfig.center,
-        shape: panelConfig.shape,
-        transitionIn: panelConfig.transitionIn,
-        transitionOut: panelConfig.transitionOut,
-      });
+export function Client(config: IConfig) {
+  const pages = config.pages.map((pageConfig: IPage) => {
+    const panels = pageConfig.panels.map((panelConfig: IPanel) => {
+      return new Panel(panelConfig);
     });
     return new Page({
       imageUrl: pageConfig.imageUrl,
       panels: panels,
-      currentPanel: pageConfig.currentPanel,
-      pageDimensions: pageConfig.pageDimensions,
-      center: pageConfig.center,
+      pageDimensions: {
+        width: pageConfig.pageDimensions.w,
+        height: pageConfig.pageDimensions.h,
+      }
     });
   });
-  let reader: PsychoReaderClient = { dataSrc: dataSrc, book: new Book(pages) };
+  let reader: PsychoReaderClient = { book: new Book(pages) };
   return reader;
 }
