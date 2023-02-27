@@ -31,7 +31,7 @@ export async function getServerSideProps() {
  * @todo A user should be able to click/touch on a page image to see the image
  *       in greater detail. Implement zoom on click/touch functionality. Should
  *       be simple enough.
- * 
+ *
  * @todo Implement window resize handling
  *
  * @todo When going from full page view and swiping to the next panel, the
@@ -308,6 +308,7 @@ const Home = (
                   </SwiperSlide>
                 );
               })}
+            <SwiperSlide></SwiperSlide>
           </SwiperElement>
         </div>
       </main>
